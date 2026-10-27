@@ -1,0 +1,10 @@
+annotated-types==0.8.0
+dnspython==2.9.0
+email-validator==2.3.0
+idna==3.20
+pydantic==2.14.1
+pydantic_core==2.50.1
+SQLAlchemy==2.1.6
+sqlmodel==0.0.48
+typing-inspection==0.4.4
+typing_extensions==4.16.0
