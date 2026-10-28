@@ -2,6 +2,7 @@
 from classes.utilisateur import Utilisateur
 from classes.formateur   import Formateur
 from classes.apprenant import Apprenant
+from classes.personnel import Personnel
 
 from decimal             import Decimal
 import datetime as dt
@@ -20,8 +21,6 @@ formateurs_a_ajouter = [
 ]
 
 apprenants = [
-    Apprenant(date_naissance=dt.date(2001, 2, 14), niveau_etude="Bac+3", telephone="0611223344",
-              utilisateur=Utilisateur(nom="Lambert", prenom="Sophie", email="sophie.lambert@mail.fr")),
     Apprenant(date_naissance=dt.date(1998, 7, 23), niveau_etude="Bac+5", telephone="0622334455", certification_obtenue="AWS Cloud Practitioner",
               utilisateur=Utilisateur(nom="Roux", prenom="Antoine", email="antoine.roux@mail.fr")),
     Apprenant(date_naissance=dt.date(2005, 11, 3), niveau_etude="Bac+2", telephone="0633445566",
@@ -62,10 +61,28 @@ apprenants = [
               utilisateur=Utilisateur(nom="Masson", prenom="Paul", email="paul.masson@mail.fr")),
 ]
 
+personnel = [
+    Personnel(poste="Responsable pédagogique", date_prise_fonction=dt.date(2025, 6, 13), responsabilites=["Accueil des apprenants", "Suivi des présences"],
+              utilisateur=Utilisateur(nom="Lambert", prenom="Sophie", email="sophie.lambert@mail.fr")),
+    Personnel(poste="Responsable pédagogique", date_prise_fonction=dt.date(2021, 9, 1), responsabilites=["Pilotage des programmes", "Recrutement des formateurs", "Suivi qualité"],
+              utilisateur=Utilisateur(nom="Perrin", prenom="Camille", email="camille.perrin@mail.fr")),
+    Personnel(poste="Coordinateur de formation", date_prise_fonction=dt.date(2022, 3, 14), responsabilites=["Planning des sessions", "Gestion des salles"],
+              utilisateur=Utilisateur(nom="Lemaire", prenom="Nicolas", email="nicolas.lemaire@mail.fr")),
+    Personnel(poste="Chargée de projet", date_prise_fonction=dt.date(2023, 1, 9), responsabilites=["Partenariats entreprises", "Suivi des stages"],
+              utilisateur=Utilisateur(nom="Colin", prenom="Élodie", email="elodie.colin@mail.fr")),
+    Personnel(poste="Responsable qualité", date_prise_fonction=dt.date(2024, 5, 21), responsabilites=["Audits internes", "Enquêtes de satisfaction", "Certification Qualiopi"],
+              utilisateur=Utilisateur(nom="Renard", prenom="Julien", email="julien.renard@mail.fr")),
+    Personnel(poste="Assistante pédagogique", date_prise_fonction=dt.date(2025, 6, 13), responsabilites=["Accueil des apprenants", "Suivi des présences"],
+              utilisateur=Utilisateur(nom="Boyer", prenom="Charlotte", email="charlotte.boyer@mail.fr")),
+
+]
+
 Formateur.ajouter_formateurs(db.engine, formateurs_a_ajouter)
 Formateur.afficher_formateurs(db.engine)
 Apprenant.ajouter_apprenant(apprenants, db.engine)
 Apprenant.afficher(db.engine)
+Personnel.ajouter_personnel(db.engine, personnel)
+Personnel.afficher_personnel(db.engine)
 
 # except Exception as e:
 #     print("Erreur :",e)
