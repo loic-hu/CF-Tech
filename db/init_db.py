@@ -5,6 +5,7 @@ from sqlalchemy.schema import CreateTable
 from pathlib import Path
 
 from classes.utilisateur import Utilisateur
+from classes.formateur import Formateur
 
 
 # Libération d'abord des connexions déjà ouvertes
@@ -22,4 +23,7 @@ engine = create_engine("sqlite:///db/CFTeck.db")
 print("✔️  Engine prêt :", engine.url, "\n")
 
 CreateTable(Utilisateur.__table__).compile(engine)
+CreateTable(Formateur.__table__).compile(engine)
+
+
 SQLModel.metadata.create_all(engine)
