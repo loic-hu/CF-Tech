@@ -1,5 +1,5 @@
-
 from classes.utilisateur import Utilisateur
+from classes.admin import Admin
 from classes.formateur   import Formateur
 from classes.apprenant import Apprenant
 from classes.personnel import Personnel
@@ -8,6 +8,13 @@ from decimal             import Decimal
 import datetime as dt
 
 import db.init_db as db
+
+admins_a_ajouter = [
+    Admin(niveau_acces="SUPERADMIN",date_promotion=dt.date(2000, 2, 20),
+        utilisateur=Utilisateur(nom="MY", prenom="Isadmin", email="myadmin.myadmin@mail.fr")),
+    Admin(niveau_acces="ADMIN",date_promotion=dt.date(2019, 1, 12),
+        utilisateur=Utilisateur(nom="AN", prenom="Nadmin", email="andamin.andamin@mail.fr")),
+]
 
 formateurs_a_ajouter = [
     Formateur(specialite="Développement Web (Python/FastAPI)",taux_horaire=Decimal("50.00"),bio="Développeur passionné par les architectures de microservices et le clean code.",
@@ -77,9 +84,11 @@ personnel = [
 
 ]
 
+Admin.ajouter_admins(db.engine, admins_a_ajouter)
+Admin.afficher_admins(db.engine)
 Formateur.ajouter_formateurs(db.engine, formateurs_a_ajouter)
 Formateur.afficher_formateurs(db.engine)
-Apprenant.ajouter_apprenant(apprenants, db.engine)
+Apprenant.ajouter_apprenant(db.engine,apprenants)
 Apprenant.afficher(db.engine)
 Personnel.ajouter_personnel(db.engine, personnel)
 Personnel.afficher_personnel(db.engine)
