@@ -1,3 +1,11 @@
+"""Modèle Utilisateur (table SQL + objet Python) du projet CF-Tech.
+ 
+Ce module définit la classe Utilisateur, qui regroupe les champs communs à
+tous les profils de la plateforme (nom, prénom, email, etc.). Les profils
+spécifiques (Apprenant, Formateur, Personnel...) y sont reliés par une clé
+étrangère `id_utilisateur`.
+"""
+
 import pydantic as pyd
 from sqlalchemy.schema import CreateTable
 import sqlmodel
@@ -11,24 +19,43 @@ from pathlib import Path
 # from __init__ import *
 
 class Utilisateur(SQLModel, table=True):
+    """Utilisateur de la plateforme (table « utilisateur »).
+ 
+    Cette classe est à la fois une table SQL et un objet Python. Elle porte
+    les informations communes à tous les profils ; les données propres à un
+    profil sont stockées dans la table de ce profil (ex. Apprenant).
+ 
+    Attributs:
+        id: Clé primaire auto-incrémentée (None tant que non inséré en base).
+        nom: Nom de famille (50 caractères maximum).
+        prenom: Prénom (50 caractères maximum).
+        email: Adresse email valide (EmailStr), unique, 100 caractères maximum.
+        date_creation: Date et heure de création du compte (UTC), remplie automatiquement.
+        est_actif: Indique si le compte est actif (True par défaut).
     """
+    # validate_assignment : revalide un champ à chaque affectation (u.email = ...)
+    # Attention : un modèle table=True ne valide pas les données à la création
+    # de l'objet ; cette validation se fait dans les schémas Pydantic.    model_config = pyd.ConfigDict(validate_assignment=True)
     
-    """
-    # FORCE la validation stricte de Pydantic v2 dès la création de l'objet
-    model_config = pyd.ConfigDict(validate_assignment=True)
-    
-    id: int | None             = Field(default=None, primary_key=True) #INT NOT NULL AUTO_INCREMENT #PRIMARY KEY(id)
-    nom: str                   = Field(max_length=50) #VARCHAR(50) NOT NULL
-    prenom: str                = Field(max_length=50) #VARCHAR(50) NOT NULL
-    email: pyd.EmailStr        = Field(unique=True, max_length=100) #VARCHAR(100) NOT NULL #UNIQUE(email)
-    date_creation: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc), description="Date à la création de l'utilisateur") #DATETIME NOT NULL
-    est_actif: bool            = Field(default=True, description="Etat actif du compte")        #LOGICAL NOT NULL
-
+    id: int | None             = Field(default=None, primary_key=True)
+    nom: str                   = Field(max_length=50)
+    prenom: str                = Field(max_length=50)
+    email: pyd.EmailStr        = Field(unique=True, max_length=100)
+    date_creation: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc), description="Date à la création de l'utilisateur")
+    est_actif: bool            = Field(default=True, description="Etat actif du compte")
 
     def afficher(utilisateurs):
+        """Affiche une liste d'objets SQLModel dans un tableau aligné (console).
+ 
+        Appel : Utilisateur.afficher(liste)
+ 
+        Les colonnes sont lues depuis le modèle (`model_fields`) : la méthode
+        fonctionne donc pour n'importe quelle table, pas seulement Utilisateur.
+ 
+        Args:
+            utilisateurs: Liste d'objets SQLModel à afficher.
         """
-        
-        """
+        # Rien à afficher si la liste est vide
         if not utilisateurs:
             print("Aucune donnée.")
             return
@@ -53,8 +80,6 @@ class Utilisateur(SQLModel, table=True):
             session.commit()        # 2. la session envoie l'INSERT et valide la transaction
             for utilisateur in utilisateurs:
                 session.refresh(utilisateur)   # 3. on recharge l'objet depuis la base, pour récupérer son id
-            requete = select(Utilisateur)
-            utilisateurs = session.exec(requete).all()
 
 
 
