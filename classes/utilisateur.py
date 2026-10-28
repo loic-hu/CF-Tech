@@ -29,8 +29,19 @@ class Utilisateur(SQLModel, table=True):
         """
         
         """
-        for p in utilisateurs:
-            print(f"{p.id:>3} | {p.nom:<10} | {p.prenom:<10} | {p.email}")
+        if not utilisateurs:
+            print("Aucune donnée.")
+            return
+        colonnes = list(type(utilisateurs[0]).model_fields)
+        lignes = [[str(getattr(o, c)) for c in colonnes] for o in utilisateurs]
+
+        # largeur de chaque colonne = valeur la plus longue (titre inclus)
+        largeurs = [max(len(c), *(len(l[i]) for l in lignes))
+                    for i, c in enumerate(colonnes)]
+
+        print("  ".join(c.ljust(w) for c, w in zip(colonnes, largeurs)))
+        for l in lignes:
+            print("  ".join(v.ljust(w) for v, w in zip(l, largeurs)))
 
 
     def ajouter_utilisateurs(utilisateurs, engine):
