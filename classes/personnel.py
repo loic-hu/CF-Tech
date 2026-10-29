@@ -120,4 +120,4 @@ class Personnel(SQLModel, table=True):
                 lignes.append(ligne)
 
             # Affichage propre avec tabulate
-            print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
+            print("\n" + tabulate.tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
