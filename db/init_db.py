@@ -5,7 +5,14 @@ from sqlalchemy.schema import CreateTable
 from pathlib import Path
 
 from classes.utilisateur import Utilisateur
-from classes.formateur import Formateur
+from classes.admin import Admin
+from classes.formateur   import Formateur
+from classes.apprenant import Apprenant
+from classes.personnel import Personnel
+from classes.equipement import Equipement
+from classes.salle import Salle
+from classes.session import SessionFormation
+from classes.inscription import Inscription
 
 
 # Libération d'abord des connexions déjà ouvertes
@@ -22,8 +29,8 @@ for chemin in ("db/CFTeck.db",):
 engine = create_engine("sqlite:///db/CFTeck.db")
 print("✔️  Engine prêt :", engine.url, "\n")
 
-CreateTable(Utilisateur.__table__).compile(engine)
-CreateTable(Formateur.__table__).compile(engine)
 
+for classtable in {Utilisateur, Admin, Formateur, Apprenant, Personnel, Equipement, Salle, SessionFormation, Inscription}:
+    CreateTable(classtable.__table__).compile(engine)
 
 SQLModel.metadata.create_all(engine)

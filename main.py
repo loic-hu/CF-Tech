@@ -1,11 +1,12 @@
 from classes.utilisateur import Utilisateur
-from classes.admin import Admin
+from classes.admin       import Admin
 from classes.formateur   import Formateur
 from classes.apprenant import Apprenant
 from classes.personnel import Personnel
 from classes.equipement import Equipement
 from classes.salle import Salle
 from classes.session import SessionFormation
+from classes.inscription import Inscription
 
 from decimal             import Decimal
 import datetime as dt
@@ -13,7 +14,7 @@ import datetime as dt
 import db.init_db as db
 
 
-tz_paris = dt.timezone(dt.timedelta(hours=1))
+
 
 
 admins_a_ajouter = [
@@ -105,62 +106,97 @@ salles_a_ajouter = [
     Salle(nom="Amphithéâtre", capacite=100, localisation="Bâtiment Principal"),
 ]
 
+# Timezone de Paris
+tz_utc = dt.timezone(dt.timedelta(hours=0))
 
 sessions_a_ajouter = [
     SessionFormation(
-        id=1,
         titre="Fondamentaux de Python & SQLModel",
         description="Apprendre les bases du langage Python et la modélisation avec SQLModel.",
-        date_debut=dt.datetime(2020, 11, 2, 9, 0, tzinfo=tz_paris),
-        date_fin=dt.datetime(2020, 11, 6, 17, 0, tzinfo=tz_paris),
+        date_debut=dt.datetime(2020, 11, 2, 9, 0, tzinfo=tz_utc),
+        date_fin=dt.datetime(2020, 11, 6, 17, 0, tzinfo=tz_utc),
         capacite_max=12,
         statut="ARCHIVEE",
         id_formateur=1,
         id_salle=1
     ),
     SessionFormation(
-        id=2,
         titre="Architecture API avec FastAPI",
         description="Créer des API REST robustes, performantes et documentées.",
-        date_debut=dt.datetime(2026, 11, 16, 9, 30, tzinfo=tz_paris),
-        date_fin=dt.datetime(2026, 11, 20, 18, 0, tzinfo=tz_paris),
+        date_debut=dt.datetime(2026, 11, 16, 9, 30, tzinfo=tz_utc),
+        date_fin=dt.datetime(2026, 11, 20, 18, 0, tzinfo=tz_utc),
         capacite_max=15,
         statut="OUVERTE",
         id_formateur=2,
         id_salle=2
     ),
     SessionFormation(
-        id=3,
         titre="Data Science et Visualisation de Données",
         description="Maîtriser Pandas, NumPy et la création de graphiques avancés.",
-        date_debut=dt.datetime(2026, 12, 7, 9, 0, tzinfo=tz_paris),
-        date_fin=dt.datetime(2026, 12, 11, 17, 0, tzinfo=tz_paris),
+        date_debut=dt.datetime(2026, 12, 7, 9, 0, tzinfo=tz_utc),
+        date_fin=dt.datetime(2026, 12, 11, 17, 0, tzinfo=tz_utc),
         capacite_max=8,
         statut="OUVERTE",
         id_formateur=1,
         id_salle=3
     ),
     SessionFormation(
-        id=4,
         titre="Docker & Déploiement Continu (CI/CD)",
         description="Conteneuriser ses applications Python et automatiser les déploiements.",
-        date_debut=dt.datetime(2026, 12, 14, 8, 30, tzinfo=tz_paris),
-        date_fin=dt.datetime(2026, 12, 16, 16, 30, tzinfo=tz_paris),
+        date_debut=dt.datetime(2026, 12, 14, 8, 30, tzinfo=tz_utc),
+        date_fin=dt.datetime(2026, 12, 16, 16, 30, tzinfo=tz_utc),
         capacite_max=10,
         statut="OUVERTE",
         id_formateur=3,
         id_salle=1
     ),
     SessionFormation(
-        id=5,
         titre="Deep Learning avec PyTorch",
         description="Introduction aux réseaux de neurones artificiels et à la vision par ordinateur.",
-        date_debut=dt.datetime(2027, 1, 11, 9, 0, tzinfo=tz_paris),
-        date_fin=dt.datetime(2027, 1, 15, 17, 0, tzinfo=tz_paris),
+        date_debut=dt.datetime(2027, 1, 11, 9, 0, tzinfo=tz_utc),
+        date_fin=dt.datetime(2027, 1, 15, 17, 0, tzinfo=tz_utc),
         capacite_max=20,
         statut="OUVERTE",
         id_formateur=2,
         id_salle=2
+    )
+]
+
+inscriptions_a_ajouter = [
+    Inscription(
+        date_inscription=dt.datetime(2026, 10, 15, 14, 30, tzinfo=dt.timezone.utc),
+        statut_inscription="ENREGISTRE",
+        presence=True,
+        id_apprenant=1,   # Clé étrangère vers l'apprenant ID 1
+        id_sessionformation=1      # Clé étrangère vers la session ID 1
+    ),
+    Inscription(
+        date_inscription=dt.datetime(2026, 10, 16, 9, 15, tzinfo=dt.timezone.utc),
+        statut_inscription="ENREGISTRE",
+        presence=True,
+        id_apprenant=2,   # Clé étrangère vers l'apprenant ID 2
+        id_sessionformation=1      # Clé étrangère vers la session ID 1
+    ),
+    Inscription(
+        date_inscription=dt.datetime(2026, 10, 18, 11, 0, tzinfo=dt.timezone.utc),
+        statut_inscription="EN_ATTENTE",
+        presence=None,    # Pas encore statué car la session n'a pas commencé
+        id_apprenant=3,   # Clé étrangère vers l'apprenant ID 3
+        id_sessionformation=2      # Clé étrangère vers la session ID 2
+    ),
+    Inscription(
+        date_inscription=dt.datetime(2026, 10, 20, 16, 45, tzinfo=dt.timezone.utc),
+        statut_inscription="ENREGISTRE",
+        presence=False,   # Absent à la formation
+        id_apprenant=1,   # Le même apprenant ID 1 sur une autre session
+        id_sessionformation=3      # Clé étrangère vers la session ID 3
+    ),
+    Inscription(
+        date_inscription=dt.datetime(2026, 10, 22, 10, 0, tzinfo=dt.timezone.utc),
+        statut_inscription="DESINSCRIT",
+        presence=None,    # Inscription annulée à l'avance
+        id_apprenant=4,   # Clé étrangère vers l'apprenant ID 4
+        id_sessionformation=2      # Clé étrangère vers la session ID 2
     )
 ]
 
@@ -182,7 +218,10 @@ Equipement.ajouter_equipement(db.engine, equipement)
 Equipement.afficher_equipement(db.engine)
 
 SessionFormation.ajouter_sessions(db.engine, sessions_a_ajouter)
+SessionFormation.afficher_sessions(db.engine)
 
+Inscription.ajouter_inscriptions(db.engine, inscriptions_a_ajouter)
+Inscription.afficher_inscription(db.engine)
 
 
 # except Exception as e:

@@ -1,17 +1,18 @@
 from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
 from sqlalchemy.orm       import joinedload
+from sqlalchemy           import func
 
 from tabulate             import tabulate
 from decimal              import Decimal
 from enum                 import Enum
 
-from classes.apprenant import Apprenant
-from classes.session   import SessionFormation
+from classes.utilisateur import Utilisateur
+from classes.apprenant   import Apprenant
+from classes.session     import SessionFormation
 
 import pydantic   as pyd
 import datetime   as dt
 
-from db.init_db import engine
 
 class StatutInscription(str, Enum):
     ENREGISTRE = 'ENREGISTRE'
@@ -33,38 +34,35 @@ class Inscription(SQLModel, table=True):
     presence: bool | None                 = Field(default=None, description="")
 
     id_apprenant: int                     = Field(foreign_key="apprenant.id", description="")
-    id_session: int                       = Field(foreign_key="session.id", description="")
+    id_sessionformation: int              = Field(foreign_key="sessionformation.id", description="")
     apprenant: Apprenant                  = Relationship()
     session_formation: SessionFormation   = Relationship()
 
 
 
     #Vérifier que nombre d’inscrits < capacite_max de la session.
-    
-
-
     @pyd.model_validator(mode='after')
     def valider_session(self) -> 'Inscription':
-        # 1. Contrainte CHECK(session.statut = 'OUVERTE')
+        # Contrainte CHECK(session.statut = 'OUVERTE')
         if self.session_formation and self.session_formation.statut != "OUVERTE":
             raise ValueError("La session voulue n'est pas ouverte.")
 
-        # 2. Récupération sécurisée du moteur de base de données
+        # Récupération sécurisée du moteur de base de données
         engine = globals().get("engine")
         if not engine:
-            return self  # Sécurité si instancié hors contexte DB (ex: tests unitaires)
+            return self
 
-        # 3. Validation de la capacité restante de la session
+        # Validation de la capacité restante de la session
         with Session(engine) as session_db:
             # Récupérer la session de formation pour connaître sa capacité max propre
-            session_form = session_db.get(SessionFormation, self.id_session)
+            session_form = session_db.get(SessionFormation, self.id_sessionformation)
             if not session_form:
-                raise ValueError(f"La session avec l'ID {self.id_session} n'existe pas.")
+                raise ValueError(f"La session avec l'ID {self.id_sessionformation} n'existe pas.")
 
             # Compter le nombre d'inscriptions déjà enregistrées pour cette session
             statement = (
                 select(func.count(Inscription.id))
-                .where(Inscription.id_session == self.id_session)
+                .where(Inscription.id_sessionformation == self.id_sessionformation)
             )
             nb_inscrits = session_db.exec(statement).one()
 
@@ -89,64 +87,56 @@ class Inscription(SQLModel, table=True):
                 session.refresh(une_session_formation)  # 3. on recharge l'objet depuis la base, pour récupérer son id
 
 
-    # def afficher_inscription(engine):
-    #     """
+    def afficher_inscription(engine):
+        """
         
-    #     """
-    #     with Session(engine) as session:
+        """
+        with Session(engine) as session:
 
-    #         print(f"\nInscriptions : ")
-    #         a_exclure_du_role = ["bio"] # Colonne(s) spécifique au role à retirer du résultat
+            print(f"\nInscriptions : ")
             
-    #         a_exclure = {"utilisateur", "id", "id_utilisateur"} | set(a_exclure_du_role)
+            requete = (
+                select(
+                    Inscription.id,
+                    Inscription.date_inscription,
+                    Inscription.statut_inscription,
+                    Utilisateur.nom.label("nom_apprenant"),                 # Cible directement la classe Utilisateur
+                    SessionFormation.titre.label("titre_session"),          # Cible directement la classe SessionFormation
+                    SessionFormation.date_debut.label("date_debut_session")
+                )
+                # 1. Jointure en cascade : Inscription -> Apprenant -> Utilisateur
+                .join(Apprenant, Inscription.id_apprenant == Apprenant.id)
+                .join(Utilisateur, Apprenant.id_utilisateur == Utilisateur.id) # Ajuster id_utilisateur selon votre modèle
+                
+                # 2. Jointure parallèle : Inscription -> SessionFormation
+                .join(SessionFormation, Inscription.id_sessionformation == SessionFormation.id)
+            )
 
-    #         # requete = select(__class__).options(joinedload(__class__.apprenant),joinedload(__class__.session_formation))
-    #         requete = (
-    #                     select(
-    #                         Inscription.id,
-    #                         Inscription.
-    #                     )
-    #                     .options(
-    #                         # 1. Jointure en cascade (Double Join) : Inscription -> Apprenant -> Utilisateur
-    #                         joinedload(Inscription.apprenant)
-    #                         .joinedload(Apprenant.utilisateur),
-                            
-    #                         # 2. Jointure parallèle : Inscription -> Session
-    #                         joinedload(Inscription.session_formation)
-    #                     )
-    #                 )
-    #         inscriptions = session.exec(requete).all()
+            donnees = session.exec(requete).all()
 
-    #         if not inscriptions:
-    #             print("Aucune donnée.")
-    #             return
+            if not donnees:
+                print("Aucune donnée.")
+                return
 
-    #         # Extraction et filtrage des colonnes
-    #         cols_inscriptions = list(type(inscriptions[0].utilisateur).model_fields)
+            # Extraction et filtrage des colonnes
+            cols_donnees = donnees[0]._fields
             
-    #         # En-têtes complets (convertis en majuscules pour le style)
-    #         en_tetes = [colonne.upper() for colonne in cols_inscriptions]
+            # En-têtes complets (convertis en majuscules pour le style)
+            en_tetes = [colonne.upper() for colonne in cols_donnees]
 
-    #         # Extraction et formatage des données
-    #         lignes = []
-    #         for inscription in inscriptions:
-    #             ligne = []
+            # Extraction et formatage des données
+            lignes = []
+            for donnee in donnees:
+                ligne = []
                 
-    #             # Données de l'utilisateur
-    #             for colonne in cols_utilisateur:
-    #                 valeur = getattr(personne.utilisateur, colonne, "N/A") if personne.utilisateur else "N/A"
-    #                 if isinstance(valeur, (dt.date, dt.datetime)):
-    #                     valeur = valeur.strftime("%Y-%m-%d")
-    #                 ligne.append(valeur)
-                
-    #             # Données spécifiques au role
-    #             for colonne in cols_personne:
-    #                 valeur = getattr(personne, colonne, "N/A")
-    #                 if isinstance(valeur, (dt.date, dt.datetime)):
-    #                     valeur = valeur.strftime("%Y-%m-%d")
-    #                 ligne.append(valeur)
+                # Données
+                for colonne in cols_donnees:
+                    valeur = getattr(donnee, colonne, "N/A")
+                    if isinstance(valeur, (dt.date, dt.datetime)):
+                        valeur = valeur.strftime("%Y-%m-%d")
+                    ligne.append(valeur)
                     
-    #             lignes.append(ligne)
+                lignes.append(ligne)
 
-    #         # Affichage propre avec tabulate
-    #         print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
+            # Affichage propre avec tabulate
+            print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))

@@ -1,12 +1,16 @@
 from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
 from sqlalchemy.orm       import joinedload
+from sqlalchemy           import func
 
 from tabulate             import tabulate
 from decimal              import Decimal
 from enum                 import Enum
 
-from classes.formateur import Formateur
-from classes.salle     import Salle
+
+from classes.utilisateur  import Utilisateur
+from classes.formateur    import Formateur
+from classes.salle        import Salle
+# from classes.inscription  import Inscription
 
 import pydantic   as pyd
 import datetime   as dt
@@ -96,4 +100,52 @@ class SessionFormation(SQLModel, table=True):    #On évite le nom de classe "Se
         """
         
         """
-        pass
+        with Session(engine) as session:
+
+            print(f"\nSessions de formation : ")
+            
+            requete = (
+                select(
+                    SessionFormation.id,
+                    SessionFormation.titre,
+                    SessionFormation.date_debut,
+                    SessionFormation.date_fin,
+                    Utilisateur.nom.label("formateur")
+                )
+                # Jointure en cascade :  -> Formateur -> Utilisateur
+                .join(Formateur, SessionFormation.id_formateur == Formateur.id)
+                .join(Utilisateur, Formateur.id_utilisateur == Utilisateur.id)
+                
+                # Jointure :  -> Salle
+                .join(Salle, SessionFormation.id_salle == Salle.id)
+                   
+            )
+
+            donnees = session.exec(requete).all()
+
+            if not donnees:
+                print("Aucune donnée.")
+                return
+
+            # Extraction et filtrage des colonnes
+            cols_donnees = donnees[0]._fields
+            
+            # En-têtes complets (convertis en majuscules pour le style)
+            en_tetes = [colonne.upper() for colonne in cols_donnees]
+
+            # Extraction et formatage des données
+            lignes = []
+            for donnee in donnees:
+                ligne = []
+                
+                # Données
+                for colonne in cols_donnees:
+                    valeur = getattr(donnee, colonne, "N/A")
+                    if isinstance(valeur, (dt.date, dt.datetime)):
+                        valeur = valeur.strftime("%Y-%m-%d")
+                    ligne.append(valeur)
+                    
+                lignes.append(ligne)
+
+            # Affichage propre avec tabulate
+            print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
