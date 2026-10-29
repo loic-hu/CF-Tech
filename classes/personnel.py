@@ -14,7 +14,7 @@ from sqlalchemy.orm import joinedload
 
 from classes.utilisateur  import Utilisateur
 
-import tabulate
+from tabulate import tabulate
 import pydantic   as pyd
 import datetime   as dt
 
@@ -120,4 +120,4 @@ class Personnel(SQLModel, table=True):
                 lignes.append(ligne)
 
             # Affichage propre avec tabulate
-            print("\n" + tabulate.tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
+            print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))
