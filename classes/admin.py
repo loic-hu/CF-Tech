@@ -1,7 +1,9 @@
-from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
-from sqlalchemy.orm import joinedload
+from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
+from sqlalchemy.orm       import joinedload
 
+from tabulate             import tabulate
 from decimal              import Decimal
+
 from classes.utilisateur  import Utilisateur
 
 import pydantic   as pyd
@@ -38,71 +40,59 @@ class Admin(SQLModel, table=True):
       """
       with Session(engine) as session:
          session.add_all(personnes)         # 1. on confie l'objet à la session (rien n'est encore écrit)
-         session.commit()                    # 2. la session envoie l'INSERT et valide la transaction
+         session.commit()                   # 2. la session envoie l'INSERT et valide la transaction
          for personne in personnes:
                session.refresh(personne)    # 3. on recharge l'objet depuis la base, pour récupérer son id
 
 
    def afficher_admins(engine):
       """
-      Affiche une liste de formateurs et leurs données utilisateur 
-      sous forme de tableau aligné.
+      Affiche la liste des admins et leurs données utilisateur 
+      sous forme de tableau propre avec tabulate.
       """
       with Session(engine) as session:
+         print(f"\nAdmins :")
 
-         requete = (
-            select(__class__)
-            .options(joinedload(__class__.utilisateur))
-         ) 
+         a_exclure_du_role = [] # Colonne(s) spécifique au role à retirer du résultat
+         a_exclure = {"utilisateur", "id", "id_utilisateur"} | set(a_exclure_du_role)
 
+         requete = select(__class__).options(joinedload(__class__.utilisateur))
          personnes = session.exec(requete).all()
 
          if not personnes:
-            print("Aucune donnée.")
-            return
+               print("Aucune donnée.")
+               return
 
-         # 1. On récupère les colonnes du Formateur ET de l'Utilisateur lié
+         # Extraction et filtrage des colonnes du role
          cols_personne = list(type(personnes[0]).model_fields)
-
-         # On exclut 'utilisateur' (qui est la relation) et 'id_utilisateur' pour éviter les doublons d'affichage
-         if "utilisateur" in cols_personne: cols_personne.remove("utilisateur")
-         if "id" in cols_personne: cols_personne.remove("id")
-         if "id_utilisateur" in cols_personne: cols_personne.remove("id_utilisateur")
-                  
-         # On ajoute les colonnes de l'utilisateur (en excluant son id)
-         #cols_utilisateur = ["id", "nom", "prenom", "email", "date_creation", "est_actif"]
+         cols_personne = [colonne for colonne in cols_personne if colonne not in a_exclure]
+         
+         # Extraction des colonnes de l'Utilisateur lié
          cols_utilisateur = list(type(personnes[0].utilisateur).model_fields)
          
-         # En-tête complet du tableau
-         colonnes = cols_utilisateur + cols_personne
+         # En-têtes complets (convertis en majuscules pour le style)
+         en_tetes = [colonne.upper() for colonne in (cols_utilisateur + cols_personne)]
 
-         # 2. Extraction des valeurs pour chaque ligne
+         # Extraction et formatage des données
          lignes = []
-         for f in personnes:
-            ligne = []
-            # Valeurs de l'utilisateur lié (via la Relationship)
-            for c in cols_utilisateur:
-                  valeur = getattr(f.utilisateur, c, "N/A") if hasattr(f, "utilisateur") and f.utilisateur else "N/A"
-                  # Formatage propre si c'est une date ou un datetime
+         for personne in personnes:
+               ligne = []
+               
+               # Données de l'utilisateur
+               for colonne in cols_utilisateur:
+                  valeur = getattr(personne.utilisateur, colonne, "N/A") if personne.utilisateur else "N/A"
                   if isinstance(valeur, (dt.date, dt.datetime)):
                      valeur = valeur.strftime("%Y-%m-%d")
-                  ligne.append(str(valeur))
-            
-            # Valeurs spécifiques au formateur
-            for c in cols_personne:
-                  valeur = getattr(f, c)
+                  ligne.append(valeur)
+               
+               # Données spécifiques au role
+               for colonne in cols_personne:
+                  valeur = getattr(personne, colonne, "N/A")
                   if isinstance(valeur, (dt.date, dt.datetime)):
                      valeur = valeur.strftime("%Y-%m-%d")
-                  ligne.append(str(valeur))
+                  ligne.append(valeur)
                   
-            lignes.append(ligne)
+               lignes.append(ligne)
 
-         # 3. Calcul de la largeur de chaque colonne (votre logique d'origine conservée)
-         largeurs = [max(len(c), *(len(l[i]) for l in lignes))
-                     for i, c in enumerate(colonnes)]
-
-         # 4. Affichage à l'écran
-         print("\n" + "  ".join(c.upper().ljust(w) for c, w in zip(colonnes, largeurs)))
-         print("-" * (sum(largeurs) + (len(largeurs) * 2))) # Ligne de séparation
-         for l in lignes:
-            print("  ".join(v.ljust(w) for v, w in zip(l, largeurs)))
+         # Affichage propre avec tabulate
+         print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))

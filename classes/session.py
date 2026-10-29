@@ -1,13 +1,17 @@
-from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
-from sqlalchemy.orm import joinedload
-from decimal import Decimal
-from enum import Enum
+from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
+from sqlalchemy.orm       import joinedload
+
+from tabulate             import tabulate
+from decimal              import Decimal
+from enum                 import Enum
+
+from classes.formateur import Formateur
+from classes.salle     import Salle
 
 import pydantic   as pyd
 import datetime   as dt
 
-from classes.formateur import Formateur
-from classes.salle     import Salle
+
 
 
 class StatutSession(str, Enum):
@@ -21,7 +25,7 @@ class StatutSession(str, Enum):
     def __str__(self):
         return self.value
 
-    
+
 class SessionFormation(SQLModel, table=True):    #On évite le nom de classe "Session" reservé par SQLModel
     """
     
@@ -42,11 +46,20 @@ class SessionFormation(SQLModel, table=True):    #On évite le nom de classe "Se
     salle: Salle                                   = Relationship()
 
 
-    @pyd.model_validator(mode='after')
-    def valider_coherence_salle(self) -> 'SessionFormation':
-        # Validation chronologique
-        if self.date_debut >= self.date_fin:
+    @pyd.field_validator("date_debut")
+    @classmethod
+    def valider_date_salle(cls, v: dt.datetime, info: pyd.ValidationInfo) -> dt.datetime:
+        
+        date_fin = info.data.get("date_fin")
+        
+        if date_fin and v >= date_fin:
             raise ValueError("La date de début doit être strictement antérieure à la date de fin.")
+            
+        return v
+
+
+    @pyd.model_validator(mode='after')
+    def valider_capacite_salle(self) -> 'SessionFormation':
 
         # Récupération de l'engine pour vérifier la capacité physique de la salle
         engine = globals().get("engine")
