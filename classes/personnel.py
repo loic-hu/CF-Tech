@@ -14,7 +14,7 @@ from sqlalchemy.orm import joinedload
 
 from classes.utilisateur  import Utilisateur
 
-import tabulate
+from tabulate import tabulate
 import pydantic   as pyd
 import datetime   as dt
 
