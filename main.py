@@ -3,6 +3,8 @@ from classes.admin import Admin
 from classes.formateur   import Formateur
 from classes.apprenant import Apprenant
 from classes.personnel import Personnel
+from classes.equipement import Equipement
+from classes.salle import Salle
 
 from decimal             import Decimal
 import datetime as dt
@@ -84,6 +86,20 @@ personnel = [
 
 ]
 
+equipement = [
+    Equipement(nom="Vidéoprojecteur 4K", description="Modèle Epson pour la salle principale", salle_id=1),
+    Equipement(nom="PC Portable Dell Latitude", description="Poste dédié au formateur", salle_id=3),
+    Equipement(nom="Tableau Blanc Interactif", description="Écran tactile 75 pouces", salle_id=3),
+    Equipement(nom="Routeur Cisco Catalyst", description="Matériel réseau pour les TP DevOps", salle_id=1),
+]
+
+salles_a_ajouter = [
+    Salle(nom="Salle Alpha", capacite=30, localisation="Bâtiment A - 1er étage"),
+    Salle(nom="Salle Beta", capacite=20, localisation="Bâtiment A - Rez-de-chaussée"),
+    Salle(nom="Labo Informatique", capacite=20, localisation="Bâtiment B - 2ème étage"),
+    Salle(nom="Amphithéâtre", capacite=100, localisation="Bâtiment Principal"),
+]
+
 Admin.ajouter_admins(db.engine, admins_a_ajouter)
 Admin.afficher_admins(db.engine)
 Formateur.ajouter_formateurs(db.engine, formateurs_a_ajouter)
@@ -92,6 +108,9 @@ Apprenant.ajouter_apprenant(db.engine,apprenants)
 Apprenant.afficher(db.engine)
 Personnel.ajouter_personnel(db.engine, personnel)
 Personnel.afficher_personnel(db.engine)
+Salle.ajouter_salles(db.engine, salles_a_ajouter)
+Equipement.ajouter_equipement(db.engine, equipement)
+Equipement.afficher_equipement(db.engine)
 
 # except Exception as e:
 #     print("Erreur :",e)
