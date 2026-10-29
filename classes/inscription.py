@@ -1,13 +1,15 @@
-from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
-from sqlalchemy.orm import joinedload
-from decimal import Decimal
-from enum import Enum
+from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
+from sqlalchemy.orm       import joinedload
 
-import pydantic   as pyd
-import datetime   as dt
+from tabulate             import tabulate
+from decimal              import Decimal
+from enum                 import Enum
 
 from classes.apprenant import Apprenant
 from classes.session   import SessionFormation
+
+import pydantic   as pyd
+import datetime   as dt
 
 from db.init_db import engine
 
@@ -34,6 +36,11 @@ class Inscription(SQLModel, table=True):
     id_session: int                       = Field(foreign_key="session.id", description="")
     apprenant: Apprenant                  = Relationship()
     session_formation: SessionFormation   = Relationship()
+
+
+
+    #Vérifier que nombre d’inscrits < capacite_max de la session.
+    
 
 
     @pyd.model_validator(mode='after')
@@ -82,8 +89,64 @@ class Inscription(SQLModel, table=True):
                 session.refresh(une_session_formation)  # 3. on recharge l'objet depuis la base, pour récupérer son id
 
 
-    def afficher_inscription(engine):
-        """
+    # def afficher_inscription(engine):
+    #     """
         
-        """
-        pass
+    #     """
+    #     with Session(engine) as session:
+
+    #         print(f"\nInscriptions : ")
+    #         a_exclure_du_role = ["bio"] # Colonne(s) spécifique au role à retirer du résultat
+            
+    #         a_exclure = {"utilisateur", "id", "id_utilisateur"} | set(a_exclure_du_role)
+
+    #         # requete = select(__class__).options(joinedload(__class__.apprenant),joinedload(__class__.session_formation))
+    #         requete = (
+    #                     select(
+    #                         Inscription.id,
+    #                         Inscription.
+    #                     )
+    #                     .options(
+    #                         # 1. Jointure en cascade (Double Join) : Inscription -> Apprenant -> Utilisateur
+    #                         joinedload(Inscription.apprenant)
+    #                         .joinedload(Apprenant.utilisateur),
+                            
+    #                         # 2. Jointure parallèle : Inscription -> Session
+    #                         joinedload(Inscription.session_formation)
+    #                     )
+    #                 )
+    #         inscriptions = session.exec(requete).all()
+
+    #         if not inscriptions:
+    #             print("Aucune donnée.")
+    #             return
+
+    #         # Extraction et filtrage des colonnes
+    #         cols_inscriptions = list(type(inscriptions[0].utilisateur).model_fields)
+            
+    #         # En-têtes complets (convertis en majuscules pour le style)
+    #         en_tetes = [colonne.upper() for colonne in cols_inscriptions]
+
+    #         # Extraction et formatage des données
+    #         lignes = []
+    #         for inscription in inscriptions:
+    #             ligne = []
+                
+    #             # Données de l'utilisateur
+    #             for colonne in cols_utilisateur:
+    #                 valeur = getattr(personne.utilisateur, colonne, "N/A") if personne.utilisateur else "N/A"
+    #                 if isinstance(valeur, (dt.date, dt.datetime)):
+    #                     valeur = valeur.strftime("%Y-%m-%d")
+    #                 ligne.append(valeur)
+                
+    #             # Données spécifiques au role
+    #             for colonne in cols_personne:
+    #                 valeur = getattr(personne, colonne, "N/A")
+    #                 if isinstance(valeur, (dt.date, dt.datetime)):
+    #                     valeur = valeur.strftime("%Y-%m-%d")
+    #                 ligne.append(valeur)
+                    
+    #             lignes.append(ligne)
+
+    #         # Affichage propre avec tabulate
+    #         print("\n" + tabulate(lignes, headers=en_tetes, tablefmt="rounded", missingval="N/A"))

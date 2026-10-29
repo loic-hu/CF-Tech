@@ -5,11 +5,16 @@ from classes.apprenant import Apprenant
 from classes.personnel import Personnel
 from classes.equipement import Equipement
 from classes.salle import Salle
+from classes.session import SessionFormation
 
 from decimal             import Decimal
 import datetime as dt
 
 import db.init_db as db
+
+
+tz_paris = dt.timezone(dt.timedelta(hours=1))
+
 
 admins_a_ajouter = [
     Admin(niveau_acces="SUPERADMIN",date_promotion=dt.date(2000, 2, 20),
@@ -100,17 +105,85 @@ salles_a_ajouter = [
     Salle(nom="Amphithéâtre", capacite=100, localisation="Bâtiment Principal"),
 ]
 
+
+sessions_a_ajouter = [
+    SessionFormation(
+        id=1,
+        titre="Fondamentaux de Python & SQLModel",
+        description="Apprendre les bases du langage Python et la modélisation avec SQLModel.",
+        date_debut=dt.datetime(2020, 11, 2, 9, 0, tzinfo=tz_paris),
+        date_fin=dt.datetime(2020, 11, 6, 17, 0, tzinfo=tz_paris),
+        capacite_max=12,
+        statut="ARCHIVEE",
+        id_formateur=1,
+        id_salle=1
+    ),
+    SessionFormation(
+        id=2,
+        titre="Architecture API avec FastAPI",
+        description="Créer des API REST robustes, performantes et documentées.",
+        date_debut=dt.datetime(2026, 11, 16, 9, 30, tzinfo=tz_paris),
+        date_fin=dt.datetime(2026, 11, 20, 18, 0, tzinfo=tz_paris),
+        capacite_max=15,
+        statut="OUVERTE",
+        id_formateur=2,
+        id_salle=2
+    ),
+    SessionFormation(
+        id=3,
+        titre="Data Science et Visualisation de Données",
+        description="Maîtriser Pandas, NumPy et la création de graphiques avancés.",
+        date_debut=dt.datetime(2026, 12, 7, 9, 0, tzinfo=tz_paris),
+        date_fin=dt.datetime(2026, 12, 11, 17, 0, tzinfo=tz_paris),
+        capacite_max=8,
+        statut="OUVERTE",
+        id_formateur=1,
+        id_salle=3
+    ),
+    SessionFormation(
+        id=4,
+        titre="Docker & Déploiement Continu (CI/CD)",
+        description="Conteneuriser ses applications Python et automatiser les déploiements.",
+        date_debut=dt.datetime(2026, 12, 14, 8, 30, tzinfo=tz_paris),
+        date_fin=dt.datetime(2026, 12, 16, 16, 30, tzinfo=tz_paris),
+        capacite_max=10,
+        statut="OUVERTE",
+        id_formateur=3,
+        id_salle=1
+    ),
+    SessionFormation(
+        id=5,
+        titre="Deep Learning avec PyTorch",
+        description="Introduction aux réseaux de neurones artificiels et à la vision par ordinateur.",
+        date_debut=dt.datetime(2027, 1, 11, 9, 0, tzinfo=tz_paris),
+        date_fin=dt.datetime(2027, 1, 15, 17, 0, tzinfo=tz_paris),
+        capacite_max=20,
+        statut="OUVERTE",
+        id_formateur=2,
+        id_salle=2
+    )
+]
+
 Admin.ajouter_admins(db.engine, admins_a_ajouter)
 Admin.afficher_admins(db.engine)
+
 Formateur.ajouter_formateurs(db.engine, formateurs_a_ajouter)
 Formateur.afficher_formateurs(db.engine)
+
 Apprenant.ajouter_apprenant(db.engine,apprenants)
 Apprenant.afficher(db.engine)
+
 Personnel.ajouter_personnel(db.engine, personnel)
 Personnel.afficher_personnel(db.engine)
+
 Salle.ajouter_salles(db.engine, salles_a_ajouter)
+
 Equipement.ajouter_equipement(db.engine, equipement)
 Equipement.afficher_equipement(db.engine)
+
+SessionFormation.ajouter_sessions(db.engine, sessions_a_ajouter)
+
+
 
 # except Exception as e:
 #     print("Erreur :",e)
