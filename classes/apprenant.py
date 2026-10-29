@@ -69,6 +69,17 @@ class Apprenant(SQLModel, table=True):
    # Relation (pas une colonne) : donne accès à l'objet Utilisateur complet
    utilisateur: Utilisateur                  = Relationship()
 
+   @pyd.field_validator("date_naissance")
+   @classmethod
+   def verif_date_naissance(cls, v: dt.date) -> dt.date:
+      """Vérifie que l'apprenant a au moins 16 ans."""
+      aujourdhui = dt.date.today()
+      # age = différence des années, moins 1 si l'anniversaire n'est pas encore passé cette année
+      age = aujourdhui.year - v.year - ((aujourdhui.month, aujourdhui.day) < (v.month, v.day))
+      if age < 16:
+         raise ValueError("L'apprenant doit avoir au moins 16 ans")
+      return v
+   
    def ajouter_apprenant(engine,apprenants):
       """Insère une liste d'apprenants (et leurs utilisateurs liés) en base.
  
