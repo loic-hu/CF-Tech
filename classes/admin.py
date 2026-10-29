@@ -1,3 +1,13 @@
+"""Modèle Admin (table SQL + objet Python) du projet CF-Tech.
+ 
+Ce module définit :
+   - AccesAdmin : l'énumération des niveaux d'accès (SUPERADMIN, ADMIN) ;
+   - Admin      : la table « admin », reliée à la table « utilisateur » par
+                  une relation 1-1 (id_utilisateur).
+ 
+Les informations communes (nom, prénom, email...) sont dans l'Utilisateur
+associé, accessible via `admin.utilisateur`.
+"""
 from sqlmodel             import Field, Relationship, Session, SQLModel, col, create_engine, func, or_, select, Column, JSON
 from sqlalchemy.orm       import joinedload
 
@@ -13,30 +23,58 @@ from enum import Enum
 
 
 class AccesAdmin(str, Enum):
-    SUPERADMIN = 'SUPERADMIN'
-    ADMIN      = 'ADMIN'
+   """Niveaux d'accès possibles pour un administrateur.
 
-    def __str__(self):
-        return self.value
+   Hérite de `str` pour pouvoir être comparé et affiché comme une chaîne.
+
+   Valeurs:
+      SUPERADMIN: droits étendus (ex. attribuer le rôle d'administrateur).
+      ADMIN: droits d'administration standard.
+   """
+   SUPERADMIN = 'SUPERADMIN'
+   ADMIN      = 'ADMIN'
+
+   def __str__(self):
+      return self.value
 
 
 class Admin(SQLModel, table=True):
-   """
+   """Profil administrateur de la plateforme (table « admin »).
 
+   Cette classe n'hérite pas de Utilisateur en Python : elle a sa propre table,
+   reliée à celle de l'utilisateur par la clé étrangère `id_utilisateur`
+   (relation 1-1).
+
+   Attributs:
+      id: Clé primaire auto-incrémentée (None tant que non inséré en base).
+      niveau_acces: Niveau de droits de l'administrateur (AccesAdmin).
+      date_promotion: Date d'obtention des droits d'administration.
+      id_utilisateur: Clé étrangère vers utilisateur.id, unique (1 profil
+         admin au maximum par utilisateur).
+      utilisateur: Objet Utilisateur lié, chargé via la relation.
    """
    # FORCE la validation stricte de Pydantic v2 dès la création de l'objet
    model_config = pyd.ConfigDict(validate_assignment=True, use_enum_values=True)
 
    id: int | None              = Field(default=None, primary_key=True)
    niveau_acces: AccesAdmin    = Field(description="Quel niveau de droits a cet admin")
-   date_promotion: dt.date     = Field(description="")     #DATE NOT NULL
+   date_promotion: dt.date     = Field(description="")
+   # Clé étrangère (colonne en base) : une valeur unique = relation 1-1
    id_utilisateur: int         = Field(unique=True, foreign_key="utilisateur.id", description="Identifiant unique de l'utilisateur")
+   # Relation (pas une colonne) : donne accès à l'objet Utilisateur complet
    utilisateur: Utilisateur    = Relationship()
 
    
    def ajouter_admins(engine, personnes):
       """
       Ajouter un ou des admin(s) à partir d'une liste d'instance(s)
+ 
+      Appel : Admin.ajouter_admins(engine, liste)
+ 
+      Args:
+         engine: Moteur SQLAlchemy connecté à la base.
+         personnes: Liste d'objets Admin, chacun avec son Utilisateur associé
+            via `utilisateur=...` (ajouté automatiquement avec l'Admin).
       """
       with Session(engine) as session:
          session.add_all(personnes)         # 1. on confie l'objet à la session (rien n'est encore écrit)
@@ -49,6 +87,14 @@ class Admin(SQLModel, table=True):
       """
       Affiche la liste des admins et leurs données utilisateur 
       sous forme de tableau propre avec tabulate.
+ 
+      Appel : Admin.afficher_admins(engine)
+ 
+      Le tableau fusionne les colonnes de l'Utilisateur (en premier) et celles
+      de l'Admin (niveau d'accès, date de promotion).
+ 
+      Args:
+         engine: Moteur SQLAlchemy connecté à la base.
       """
       with Session(engine) as session:
          print(f"\nAdmins :")
